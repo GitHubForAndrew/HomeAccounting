@@ -130,6 +130,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Runtime.Caching" />
     <Reference Include="System.Web.DynamicData" />
     <Reference Include="System.Web.Entity" />
     <Reference Include="System.Web.ApplicationServices" />
@@ -296,6 +297,8 @@
     <None Include="NLog.xsd">
       <SubType>Designer</SubType>
     </None>
+    <None Include="Properties\PublishProfiles\Accounting_Release.pubxml" />
+    <None Include="Properties\PublishProfiles\Accounting_Test.pubxml" />
     <None Include="Properties\PublishProfiles\HomeAccountingSite.pubxml" />
     <Content Include="Models\KnockoutModels\TodoCreateViewModel.js" />
     <Content Include="Scripts\bootstrap-datepicker.js" />
@@ -401,7 +404,6 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Abstract\IDebtManager.cs" />
     <Compile Include="Abstract\IPagingInfoCreator.cs" />
     <Compile Include="Abstract\IPayingItemHelper.cs" />
     <Compile Include="Abstract\IPayingItemProductHelper.cs" />
@@ -411,14 +413,12 @@
     <Compile Include="Abstract\IReportMenu.cs" />
     <Compile Include="Abstract\IReportMenuItem.cs" />
     <Compile Include="Abstract\IReportModelCreator.cs" />
-    <Compile Include="Abstract\ITaskHelper.cs" />
     <Compile Include="Abstract\IUserReporter.cs" />
     <Compile Include="App_Start\AccIdentityConfig.cs" />
     <Compile Include="App_Start\BundleConfig.cs" />
     <Compile Include="App_Start\FilterConfig.cs" />
     <Compile Include="App_Start\NinjectWebCommon.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />
-    <Compile Include="Concrete\DebtManager.cs" />
     <Compile Include="Concrete\EmailUserReporter.cs" />
     <Compile Include="Concrete\PagingInfoCreator.cs" />
     <Compile Include="Concrete\ReportMenu.cs" />
@@ -428,6 +428,7 @@
     <Compile Include="Controllers\AdminController.cs" />
     <Compile Include="Controllers\AdminSectionController.cs" />
     <Compile Include="Controllers\DebtController.cs" />
+    <Compile Include="Controllers\ErrorController.cs" />
     <Compile Include="Controllers\MainBarController.cs" />
     <Compile Include="Controllers\MenuBarController.cs" />
     <Compile Include="Controllers\NavRightController.cs" />
@@ -462,16 +463,16 @@
     <Compile Include="Infrastructure\CustomPasswordValidator.cs" />
     <Compile Include="Infrastructure\CustomUserValidator.cs" />
     <Compile Include="Infrastructure\Events\TimerModuleEventArgs.cs" />
-    <Compile Include="Infrastructure\Modules\ErrorModule.cs" />
     <Compile Include="Infrastructure\Modules\ModuleRegistration.cs" />
     <Compile Include="Infrastructure\Modules\SessionExpireModule.cs" />
     <Compile Include="Infrastructure\Modules\TimerModule.cs" />
     <Compile Include="Infrastructure\Modules\TotalTimeModule.cs" />
     <Compile Include="Infrastructure\NinjectDependencyResolver.cs" />
     <Compile Include="Infrastructure\TransferModelAttribute.cs" />
-    <Compile Include="Migrations\201611290710578_CreateDatabase.cs" />
-    <Compile Include="Migrations\201611290710578_CreateDatabase.Designer.cs">
-      <DependentUpon>201611290710578_CreateDatabase.cs</DependentUpon>
+    <Compile Include="Infrastructure\UserHasAnyCategoriesAttribute.cs" />
+    <Compile Include="Migrations\201611300528457_InitDatabase.cs" />
+    <Compile Include="Migrations\201611300528457_InitDatabase.Designer.cs">
+      <DependentUpon>201611300528457_InitDatabase.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AccRoleModel.cs" />
@@ -599,6 +600,8 @@
     <Content Include="Views\OrderDetail\_Add.cshtml" />
     <Content Include="Views\OrderDetail\_SubCategories.cshtml" />
     <Content Include="Views\MenuBar\_MenuBar.cshtml" />
+    <Content Include="Views\PayingItem\_Message.cshtml" />
+    <Content Include="Views\Error\UserHasNoCategory.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
@@ -608,6 +611,8 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
+    <Folder Include="lib\" />
+    <Folder Include="sqlScripts\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\BussinessLogic\BussinessLogic.csproj">
@@ -628,8 +633,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Migrations\201611290710578_CreateDatabase.resx">
-      <DependentUpon>201611290710578_CreateDatabase.cs</DependentUpon>
+    <EmbeddedResource Include="Migrations\201611300528457_InitDatabase.resx">
+      <DependentUpon>201611300528457_InitDatabase.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

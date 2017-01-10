@@ -5,9 +5,8 @@ using System.Threading.Tasks;
 using System.Web.Mvc;
 using System.Web.SessionState;
 using HomeAccountingSystem_DAL.Model;
-using HomeAccountingSystem_DAL.Repositories;
-using HomeAccountingSystem_WebUI.Abstract;
 using HomeAccountingSystem_WebUI.Models;
+using Services;
 
 namespace HomeAccountingSystem_WebUI.Controllers
 {
@@ -15,15 +14,16 @@ namespace HomeAccountingSystem_WebUI.Controllers
     [SessionState(SessionStateBehavior.ReadOnly)]
     public class DebtController : Controller
     {
-        private readonly IDebtManager _debtManager;
-        private readonly IRepository<Account> _accRepo;
+        private readonly IDebtService _debtManager;
+        private readonly IAccountService _accService;
 
-        public DebtController(IDebtManager debtManager, IRepository<Account> accRepo)
+
+        public DebtController(IDebtService debtManager, IAccountService accService)
         {
             _debtManager = debtManager;
-            _accRepo = accRepo;
+            _accService = accService;
         }
-        
+
         public PartialViewResult Index(WebUser user)
         {
             var items = _debtManager.GetOpenUserDebts(user.Id).ToList();
@@ -83,9 +83,15 @@ namespace HomeAccountingSystem_WebUI.Controllers
             return RedirectToAction("DebtList");
         }
 
+        [HttpPost]
+        public async Task<ActionResult> Delete(int id)
+        {
+            await _debtManager.DeleteAsync(id);
+            return RedirectToAction("DebtList");
+        }
         private async Task<IEnumerable<Account>> AccountList(string userId)
         {
-            return (await _accRepo.GetListAsync()).Where(x => x.UserId == userId).ToList();
+            return (await _accService.GetListAsync()).Where(x => x.UserId == userId).ToList();
         }
 
     }

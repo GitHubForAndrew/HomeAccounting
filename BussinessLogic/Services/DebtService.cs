@@ -2,19 +2,18 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using HomeAccountingSystem_DAL.Abstract;
 using HomeAccountingSystem_DAL.Model;
 using HomeAccountingSystem_DAL.Repositories;
-using HomeAccountingSystem_WebUI.Abstract;
+using Services;
 
-namespace HomeAccountingSystem_WebUI.Concrete
+namespace BussinessLogic.Services
 {
-    public class DebtManager:IDebtManager
+    public class DebtService:IDebtService
     {
         private readonly IRepository<Debt> _debtRepo;
         private readonly IRepository<Account> _accRepo;
 
-        public DebtManager(IRepository<Debt> deptRepo, IRepository<Account> accRepo)
+        public DebtService(IRepository<Debt> deptRepo, IRepository<Account> accRepo)
         {
             _debtRepo = deptRepo;
             _accRepo = accRepo;
@@ -59,6 +58,12 @@ namespace HomeAccountingSystem_WebUI.Concrete
         public IEnumerable<Debt> GetOpenUserDebts(string userId)
         {
             return _debtRepo.GetList().Where(x => x.UserId == userId && x.DateEnd == null);
+        }
+
+        public async Task DeleteAsync(int id)
+        {
+            await _debtRepo.DeleteAsync(id);
+            await _debtRepo.SaveAsync();
         }
 
         private async Task CreateDebt(Debt debt)

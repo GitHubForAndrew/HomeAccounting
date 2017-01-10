@@ -2,9 +2,9 @@
 using System.Threading.Tasks;
 using HomeAccountingSystem_DAL.Model;
 
-namespace HomeAccountingSystem_WebUI.Abstract
+namespace Services
 {
-    public interface IDebtManager
+    public interface IDebtService
     {
         Task CreateAsync(Debt debt);
         Task CloseAsync(int id);
@@ -12,5 +12,6 @@ namespace HomeAccountingSystem_WebUI.Abstract
         Task<Debt> GetItemAsync(int id);
         IEnumerable<Debt> GetItems(string userId);
         IEnumerable<Debt> GetOpenUserDebts(string userId);
+        Task DeleteAsync(int id);
     }
 }

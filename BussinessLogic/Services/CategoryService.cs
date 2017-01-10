@@ -18,6 +18,7 @@ namespace BussinessLogic.Services
 
         public async Task CreateAsync(Category item)
         {
+            item.Active = true;
             await _categoryRepository.CreateAsync(item);
             await _categoryRepository.SaveAsync();
         }
@@ -41,6 +42,10 @@ namespace BussinessLogic.Services
         public async Task UpdateAsync(Category item)
         {
             await _categoryRepository.UpdateAsync(item);
+        }
+
+        public async Task SaveAsync()
+        {
             await _categoryRepository.SaveAsync();
         }
 
@@ -53,6 +58,12 @@ namespace BussinessLogic.Services
         {
             var cat = await _categoryRepository.GetItemAsync(id);
             return cat.PayingItem.Any();
+        }
+
+        public async Task<IEnumerable<Category>> GetActiveGategoriesByUser(string userId)
+        {
+            var cats = await _categoryRepository.GetListAsync();
+            return cats?.Where(x => x.Active && x.UserId == userId);
         }
     }
 }

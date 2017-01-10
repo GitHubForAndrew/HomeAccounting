@@ -78,6 +78,11 @@ namespace HomeAccountingSystem_WebUI.Controllers
 
         public async Task<ActionResult> Add(WebUser user, int typeOfFlow)
         {
+            if (!(await _categoryService.GetListAsync()).Any(x => x.UserId == user.Id && x.Active == true && x.TypeOfFlowID == typeOfFlow))
+            {
+               TempData["message"] = "Сначала необходимо добавить хотя бы одну категорию";
+                return PartialView("_Message");
+            }
             await FillViewBag(user,typeOfFlow);
             var piModel = new PayingItemModel()
             {
@@ -134,7 +139,7 @@ namespace HomeAccountingSystem_WebUI.Controllers
             var pItemEditModel = new PayingItemEditModel()
             {
                 PayingItem = pItem,
-                PayingItemProducts = new List<PaiyngItemProduct>(),
+                PayingItemProducts = new List<PaiyngItemProduct>()
             };
             PayingItemEditModel.OldCategoryId = pItem.CategoryID;
 
@@ -142,11 +147,8 @@ namespace HomeAccountingSystem_WebUI.Controllers
             {
                 return PartialView(pItemEditModel);
             }
-            else
-            {
-                _pItemProductHelper.FillPayingItemEditModel(pItemEditModel, id);
-                return PartialView(pItemEditModel);
-            }
+            _pItemProductHelper.FillPayingItemEditModel(pItemEditModel, id);
+            return PartialView(pItemEditModel);
         }
 
         [HttpPost]
@@ -154,7 +156,6 @@ namespace HomeAccountingSystem_WebUI.Controllers
         {
             if (ModelState.IsValid)
             {
-                pItem.PayingItem.UserId = user.Id;
                 if (pItem.PricesAndIdsInItem == null)
                 {
                     await _payingItemService.UpdateAsync(pItem.PayingItem);
@@ -225,8 +226,8 @@ namespace HomeAccountingSystem_WebUI.Controllers
 
         private async Task FillViewBag(WebUser user, int typeOfFlowId)
         {
-            ViewBag.Categories = (await _categoryService.GetListAsync())
-                .Where(i => i.UserId == user.Id && i.TypeOfFlowID == typeOfFlowId)
+            ViewBag.Categories = (await _categoryService.GetActiveGategoriesByUser(user.Id))
+                .Where(i => i.TypeOfFlowID == typeOfFlowId)
                 .ToList();
             ViewBag.Accounts = (await _accountService.GetListAsync())
                 .Where(x => x.UserId == user.Id)

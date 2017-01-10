@@ -1,9 +1,9 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Web.Mvc;
 using System.Web.SessionState;
 using HomeAccountingSystem_DAL.Model;
-using HomeAccountingSystem_DAL.Repositories;
 using HomeAccountingSystem_WebUI.Abstract;
 using HomeAccountingSystem_WebUI.Models;
 using Services;
@@ -14,33 +14,34 @@ namespace HomeAccountingSystem_WebUI.Controllers
     [SessionState(SessionStateBehavior.ReadOnly)]
     public class CategoryController : Controller
     {
-        private readonly IRepository<TypeOfFlow> _tofRepository;
+        private readonly ITypeOfFlowService _tofService;
         private readonly IPlanningHelper _planningHelper;
         private readonly ICategoryService _categoryService;
         private readonly int _pagesize = 7;
 
-        public CategoryController(IRepository<TypeOfFlow> tofRepo, 
+        public CategoryController( ITypeOfFlowService tofService,
             IPlanningHelper planningHelper, ICategoryService categoryService)
         {
-            _tofRepository = tofRepo;
+            _tofService = tofService;
             _planningHelper = planningHelper;
             _categoryService = categoryService;
         }
 
         public async Task<ActionResult> Index(WebUser user, int page = 1)
         {
+            var categories = (await _categoryService.GetListAsync())
+                .Where(x => x.UserId == user.Id)
+                .ToList();
             var catView = new CategoriesViewModel()
             {
-                Categories = (await _categoryService.GetListAsync())
-                    .Where(x => x.UserId == user.Id)
+                Categories = categories
                     .Skip((page - 1)*_pagesize)
                     .Take(_pagesize)
                     .ToList(),
                 PagingInfo = new PagingInfo()
                 {
                     CurrentPage = page,
-                    TotalItems = (await _categoryService.GetListAsync())
-                        .Count(x => x.UserId == user.Id),
+                    TotalItems = categories.Count,
                     ItemsPerPage = _pagesize
                 }
             };
@@ -111,7 +112,7 @@ namespace HomeAccountingSystem_WebUI.Controllers
         [HttpGet]
         public async Task<ActionResult> Edit(int id)
         {
-            ViewBag.TypesOfFlow = _tofRepository.GetList().ToList();
+            ViewBag.TypesOfFlow = await GetTypesOfFlow();
             var item = await _categoryService.GetItemAsync(id);
             return PartialView(item);
         }
@@ -122,19 +123,20 @@ namespace HomeAccountingSystem_WebUI.Controllers
             if (ModelState.IsValid)
             {
                 await _categoryService.UpdateAsync(category);
+                await _categoryService.SaveAsync();
                 return RedirectToAction("GetCategoriesAndPages");
             }
             else
             {
-                ViewBag.TypesOfFlow = _tofRepository.GetList().ToList();
+                ViewBag.TypesOfFlow =await GetTypesOfFlow();
                 return PartialView(category);
             }
         }
 
         [HttpGet]
-        public ActionResult Add(WebUser user)
+        public async Task<ActionResult> Add(WebUser user)
         {
-            ViewBag.TypesOfFlow = _tofRepository.GetList().ToList();
+            ViewBag.TypesOfFlow = await GetTypesOfFlow();
             return PartialView(new Category() {UserId = user.Id});
         }
 
@@ -149,7 +151,7 @@ namespace HomeAccountingSystem_WebUI.Controllers
             }
             else
             {
-                ViewBag.TypesOfFlow = _tofRepository.GetList().ToList();
+                ViewBag.TypesOfFlow = await GetTypesOfFlow();
                 return PartialView(category);
             }
         }
@@ -162,6 +164,11 @@ namespace HomeAccountingSystem_WebUI.Controllers
                 await _categoryService.DeleteAsync(id);
             }
             return RedirectToAction("GetCategoriesAndPages");
+        }
+
+        private async Task<IEnumerable<TypeOfFlow>> GetTypesOfFlow()
+        {
+            return (await _tofService.GetListAsync()).ToList();
         }
     }
 }

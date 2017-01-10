@@ -3,11 +3,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Web.Mvc;
 using System.Web.SessionState;
-using HomeAccountingSystem_DAL.Abstract;
 using HomeAccountingSystem_DAL.Model;
-using HomeAccountingSystem_DAL.Repositories;
 using HomeAccountingSystem_WebUI.Abstract;
 using HomeAccountingSystem_WebUI.Models;
+using Services;
 
 namespace HomeAccountingSystem_WebUI.Controllers
 {
@@ -15,24 +14,24 @@ namespace HomeAccountingSystem_WebUI.Controllers
     [SessionState(SessionStateBehavior.Default)]
     public class PlaningController : Controller
     {
-        private readonly IRepository<Category> _catRepository;
-        private readonly IRepository<PlanItem> _planItemRepository;
+        private readonly ICategoryService _categoryService;
+        private readonly IPlanItemService _planItemService;
         private readonly IPlanningHelper _planningHelper;
 
-        public PlaningController(IRepository<Category> catRepository,IRepository<PlanItem> planItemRepository, 
-            IRepository<PayingItem> payingItemRepository, IPlanningHelper planningHelper)
+        public PlaningController(ICategoryService categoryService,IPlanItemService planItemService, 
+             IPlanningHelper planningHelper)
         {
-            _catRepository = catRepository;
-            _planItemRepository = planItemRepository;
+            _categoryService = categoryService;
+            _planItemService = planItemService;
             _planningHelper = planningHelper;
         }
 
-        public RedirectToRouteResult Prepare(WebUser user)
+        public async Task<ActionResult> Prepare(WebUser user)
         {
-            var categories = _catRepository.GetList().Any(x => x.UserId == user.Id);
+            var categories = (await _categoryService.GetListAsync()).Any(x => x.UserId == user.Id);
             if (categories)
             {
-                var planItems = _planItemRepository.GetList().Any(x => x.UserId == user.Id);
+                var planItems = (await _planItemService.GetListAsync(user.Id)).Any();
                 return RedirectToAction(planItems ? "ViewPlan" : "CreatePlan");
             }
             else
@@ -48,16 +47,16 @@ namespace HomeAccountingSystem_WebUI.Controllers
             return RedirectToAction("ViewPlan");
         }
 
-        public ActionResult ViewPlan(WebUser user)
+        public async Task<ActionResult> ViewPlan(WebUser user)
         {
-            if(_catRepository.GetList().Any(x => x.UserId == user.Id && x.ViewInPlan == true))
+            if((await _categoryService.GetActiveGategoriesByUser(user.Id)).Any(x => x.ViewInPlan == true))
             {
-                var model = _planningHelper.GetUserBalance(user, false);
+                var model = await _planningHelper.GetUserBalance(user, false);
                 return View(model);
             }
             else
             {
-                var model = _planningHelper.GetUserBalance(user, true);
+                var model = await _planningHelper.GetUserBalance(user, true);
                 return View(model);
             }
 
@@ -80,8 +79,8 @@ namespace HomeAccountingSystem_WebUI.Controllers
             {
                 if (!model.Spread)
                 {
-                    await _planItemRepository.UpdateAsync(model.PlanItem);
-                    await _planItemRepository.SaveAsync();
+                    await _planItemService.UpdateAsync(model.PlanItem);
+                    await _planItemService.SaveAsync();
                 }
                 else
                 {
@@ -112,9 +111,9 @@ namespace HomeAccountingSystem_WebUI.Controllers
             return RedirectToAction("ViewPlan");
         }
 
-        public ActionResult SelectCategories(WebUser user)
+        public async Task<ActionResult> SelectCategories(WebUser user)
         {
-            var cats = GetUserCategories(user);
+            var cats = await GetUserCategories(user);
             return View(cats);
         }
 
@@ -122,15 +121,19 @@ namespace HomeAccountingSystem_WebUI.Controllers
         {
             foreach (var id in ids)
             {
-                var cat = await _catRepository.GetItemAsync(id);
+                var cat = await _categoryService.GetItemAsync(id);
                 cat.ViewInPlan = true;
-                await _catRepository.UpdateAsync(cat);
+                await _categoryService.UpdateAsync(cat);
             }
-            _catRepository.GetList()
+            (await _categoryService.GetListAsync())
                 .Where(x => !ids.Contains(x.CategoryID))
                 .ToList()
-                .ForEach(x=> { x.ViewInPlan = false; });
-            await _catRepository.SaveAsync();
+                .ForEach(x =>
+                {
+                    x.ViewInPlan = false;
+                });
+            await _categoryService.SaveAsync();
+            
             return Json(new {url = Url.Action("ViewPlan")});
         }
 
@@ -138,14 +141,14 @@ namespace HomeAccountingSystem_WebUI.Controllers
         {
             var editPlanModel = new EditPlaningModel()
             {
-                PlanItem = await _planItemRepository.GetItemAsync(id)
+                PlanItem = await _planItemService.GetItemAsync(id)
             };
             return editPlanModel;
         }
 
-        private IList<Category> GetUserCategories(IWorkingUser user)
+        private async Task<IList<Category>> GetUserCategories(WebUser user)
         {
-            return _catRepository.GetList().Where(x=>x.UserId == user.Id).ToList();
+            return (await _categoryService.GetActiveGategoriesByUser(user.Id)).ToList();
         }
     }
 }

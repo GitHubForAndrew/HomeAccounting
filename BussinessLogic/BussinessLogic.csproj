@@ -64,12 +64,15 @@
     <Compile Include="Services\AccountService.cs" />
     <Compile Include="Services\CategoryService.cs" />
     <Compile Include="Services\DbHelper.cs" />
+    <Compile Include="Services\DebtService.cs" />
     <Compile Include="Services\EmailSenderService.cs" />
     <Compile Include="Services\OrderDetailService.cs" />
     <Compile Include="Services\OrderService.cs" />
     <Compile Include="Services\PayingItemProductService.cs" />
     <Compile Include="Services\PayingItemService.cs" />
+    <Compile Include="Services\PlanItemService.cs" />
     <Compile Include="Services\ProductService.cs" />
+    <Compile Include="Services\TypeOfFlowService.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DomainModels.EntityORM\DomainModels.EntityORM.csproj">
